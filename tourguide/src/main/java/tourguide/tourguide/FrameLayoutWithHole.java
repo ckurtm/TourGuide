@@ -1,5 +1,6 @@
 package tourguide.tourguide;
 
+import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -8,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
-import android.graphics.drawable.Drawable;
 import android.support.v4.view.MotionEventCompat;
 import android.text.TextPaint;
 import android.util.AttributeSet;
@@ -16,7 +16,10 @@ import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.FrameLayout;
+import java.util.ArrayList;
 
 /**
  * TODO: document your custom view class.
@@ -36,17 +39,25 @@ public class FrameLayoutWithHole extends FrameLayout {
     private int [] mPos;
     private float mDensity;
     private Overlay mOverlay;
+
+    private ArrayList<AnimatorSet> mAnimatorSetArrayList;
+
     public void setViewHole(View viewHole) {
         this.mViewHole = viewHole;
         enforceMotionType();
     }
-
+    public void addAnimatorSet(AnimatorSet animatorSet){
+        if (mAnimatorSetArrayList==null){
+            mAnimatorSetArrayList = new ArrayList<AnimatorSet>();
+        }
+        mAnimatorSetArrayList.add(animatorSet);
+    }
     private void enforceMotionType(){
-        Log.d("tourguide","enforceMotionType 1");
+        Log.d("tourguide", "enforceMotionType 1");
         if (mViewHole!=null) {Log.d("tourguide","enforceMotionType 2");
             if (mMotionType!=null && mMotionType == TourGuide.MotionType.ClickOnly) {
                 Log.d("tourguide","enforceMotionType 3");
-                Log.d("tourguide","only Swiping");
+                Log.d("tourguide","only Clicking");
                 mViewHole.setOnTouchListener(new OnTouchListener() {
                     @Override
                     public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -105,8 +116,8 @@ public class FrameLayoutWithHole extends FrameLayout {
         mTextPaint.setTextAlign(Paint.Align.LEFT);
 
         Point size = new Point();
-        size.x = mActivity.getWindowManager().getDefaultDisplay().getWidth();
-        size.y = mActivity.getWindowManager().getDefaultDisplay().getHeight();
+        size.x = mActivity.getResources().getDisplayMetrics().widthPixels;
+        size.y = mActivity.getResources().getDisplayMetrics().heightPixels;
 
         mEraserBitmap = Bitmap.createBitmap(size.x, size.y, Bitmap.Config.ARGB_8888);
         mEraserCanvas = new Canvas(mEraserBitmap);
@@ -120,10 +131,53 @@ public class FrameLayoutWithHole extends FrameLayout {
         mEraser = new Paint();
         mEraser.setColor(0xFFFFFFFF);
         mEraser.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+        mEraser.setFlags(Paint.ANTI_ALIAS_FLAG);
 
         Log.d("tourguide","getHeight: "+ size.y);
         Log.d("tourguide","getWidth: " + size.x);
 
+    }
+
+    private boolean mCleanUpLock = false;
+    protected void cleanUp(){
+        if (getParent() != null) {
+            if (mOverlay!=null && mOverlay.mExitAnimation!=null) {
+                performOverlayExitAnimation();
+            } else {
+                ((ViewGroup) this.getParent()).removeView(this);
+            }
+        }
+    }
+    private void performOverlayExitAnimation(){
+        if (!mCleanUpLock) {
+            final FrameLayout _pointerToFrameLayout = this;
+            mCleanUpLock = true;
+            Log.d("tourguide","Overlay exit animation listener is overwritten...");
+            mOverlay.mExitAnimation.setAnimationListener(new Animation.AnimationListener() {
+                @Override public void onAnimationStart(Animation animation) {}
+                @Override public void onAnimationRepeat(Animation animation) {}
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    ((ViewGroup) _pointerToFrameLayout.getParent()).removeView(_pointerToFrameLayout);
+                }
+            });
+            this.startAnimation(mOverlay.mExitAnimation);
+        }
+    }
+    /* comment this whole method to cause a memory leak */
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        /* cleanup reference to prevent memory leak */
+        mEraserCanvas.setBitmap(null);
+        mEraserBitmap = null;
+
+        if (mAnimatorSetArrayList != null && mAnimatorSetArrayList.size() > 0){
+            for(int i=0;i<mAnimatorSetArrayList.size();i++){
+                mAnimatorSetArrayList.get(i).end();
+                mAnimatorSetArrayList.get(i).removeAllListeners();
+            }
+        }
     }
 
     /** Show an event in the LogCat view, for debugging */
@@ -226,6 +280,13 @@ public class FrameLayoutWithHole extends FrameLayout {
         canvas.drawBitmap(mEraserBitmap, 0, 0, null);
 
     }
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (mOverlay!=null && mOverlay.mEnterAnimation!=null) {
+            this.startAnimation(mOverlay.mEnterAnimation);
+        }
+    }
     /**
      *
      * Convenient method to obtain screen width in pixel
@@ -234,8 +295,7 @@ public class FrameLayoutWithHole extends FrameLayout {
      * @return screen width in pixel
      */
     public int getScreenWidth(Activity activity){
-        Display display = activity.getWindowManager().getDefaultDisplay();
-        return display.getWidth();
+        return activity.getResources().getDisplayMetrics().widthPixels;
     }
 
     /**
@@ -246,7 +306,6 @@ public class FrameLayoutWithHole extends FrameLayout {
      * @return screen width in pixel
      */
     public int getScreenHeight(Activity activity){
-        Display display = activity.getWindowManager().getDefaultDisplay();
-        return display.getHeight();
+        return activity.getResources().getDisplayMetrics().heightPixels;
     }
 }

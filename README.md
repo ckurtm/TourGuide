@@ -26,7 +26,7 @@ Add the below dependencies into your gradle file:
             url "https://oss.sonatype.org/content/repositories/snapshots"
         }
     }
-    compile ('com.github.worker8:tourguide:1.0.10-SNAPSHOT@aar'){
+    compile ('com.github.worker8:tourguide:1.0.14-SNAPSHOT@aar'){
         transitive=true
     }
 # MinSDK Version
@@ -103,11 +103,25 @@ Overlay is the semi-transparent background that is used to cover up other UI ele
 - `disableClick(true)` will make elements covered by the overlay to become unclickable. Refer to Overlay Customization Activity in the example.
 - `.setStyle()` Currently only 2 styles are available: `Overlay.Style.Rectangle` and `Overlay.Style.Circle`
 
+# Running TourGuide in Sequence
+Running TourGuide in sequence is a very common use case where you want to show a few buttons in a row instead of just one. Running in sequence can be subdivided into 2 use cases:
+
+- Case 1: When you want user to click on the button itself to proceed to next TourGuide
+- Refer to [ManualSequenceActivity.java in the demo](https://github.com/worker8/TourGuide/blob/master/app/src/main/java/tourguide/tourguidedemo/ManualSequenceActivity.java)
+
+![](https://github.com/worker8/all_my_media_files/raw/master/button_itself.gif)
+
+- Case 2: When you don't want user to actually click on the button itself, but the Overlay to proceed to next TourGuide
+- Refer to [OverlaySequenceTourActivity.java in the demo](https://github.com/worker8/TourGuide/blob/master/app/src/main/java/tourguide/tourguidedemo/OverlaySequenceTourActivity.java)
+
+![](https://github.com/worker8/all_my_media_files/raw/master/click_overlay.gif)
+
+
 # Source code of Example
 Refer to this repo!
 
 # Demo App
-Coming soon..! I'll upload to playstore once I feel comfortable.
+[Playstore Link](https://play.google.com/store/apps/details?id=tourguide.tourguide)
 
 # Roadmap
 [Refer to The Roadmap for tentative plans of TourGuide](https://github.com/worker8/TourGuide/wiki/Roadmap)
@@ -115,7 +129,9 @@ Coming soon..! I'll upload to playstore once I feel comfortable.
 # Contributing
 You are very welcome to contribute to this project!
 
-Refer to [The Roadmap](https://github.com/worker8/TourGuide/blob/master/ROADMAP.md) if you're interested in developing a new feature or write some tests for TourGuide.
+Before sending pull request, have a look at this: [Contributing Guidelines](https://github.com/worker8/TourGuide/wiki/Contributing-Guidelines)
+
+Refer to [The Roadmap](https://github.com/worker8/TourGuide/wiki/Roadmap) if you're interested in developing a new feature or write some tests for TourGuide.
 
 # License
 
